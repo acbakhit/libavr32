@@ -163,11 +163,12 @@ uhc_enum_status_t uhi_midi_install(uhc_device_t* dev) {
                     print_dbg(" ; subclass: 0x");
                     print_dbg_hex(ptr_iface->bInterfaceSubClass);
                 #endif
-                if (ptr_iface->bInterfaceClass == HID_CLASS){
-                    print_dbg("\r\n got HID interface");
-                    break;
+                // Only reset support flag if no MIDI endpoints have been allocated yet.
+                // This allows devices with multiple interfaces (MIDI + HID, MIDI + Audio)
+                // to enumerate correctly after the MIDI interface is found and configured.
+                if (uhi_midi_dev.ep_in == 0 && uhi_midi_dev.ep_out == 0) {
+                    iface_supported = false;
                 }
-                iface_supported = false;
             }
             break;
 
