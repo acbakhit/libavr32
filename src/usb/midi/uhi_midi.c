@@ -163,10 +163,10 @@ uhc_enum_status_t uhi_midi_install(uhc_device_t* dev) {
                     print_dbg(" ; subclass: 0x");
                     print_dbg_hex(ptr_iface->bInterfaceSubClass);
                 #endif
-                // Only reset support flag if no MIDI endpoints have been allocated yet.
-                // This allows devices with multiple interfaces (MIDI + HID, MIDI + Audio)
-                // to enumerate correctly after the MIDI interface is found and configured.
-                if (uhi_midi_dev.ep_in == 0 && uhi_midi_dev.ep_out == 0) {
+                // Only reset if no MIDI interface has been found yet (endpoints still at initial 0xf).
+                // Once MIDI is found (endpoints set to 0), don't reset the flag for subsequent
+                // non-MIDI interfaces, allowing multi-interface devices to enumerate correctly.
+                if (uhi_midi_dev.ep_in == 0xf && uhi_midi_dev.ep_out == 0xf) {
                     iface_supported = false;
                 }
             }
@@ -252,8 +252,10 @@ void uhi_midi_uninstall(uhc_device_t* dev) {
     return; // Device not enabled in this interface
   }
   uhi_midi_dev.dev = NULL;
+  uhi_midi_dev.ep_in = 0xf;
+  uhi_midi_dev.ep_out = 0xf;
   Assert(uhi_midi_dev.report!=NULL);
-  midi_change(dev, false);  
+  midi_change(dev, false);
 }
 
 bool uhi_midi_in_run(uint8_t * buf, iram_size_t buf_size,
