@@ -163,12 +163,7 @@ uhc_enum_status_t uhi_midi_install(uhc_device_t* dev) {
                     print_dbg(" ; subclass: 0x");
                     print_dbg_hex(ptr_iface->bInterfaceSubClass);
                 #endif
-                // Only reset if no MIDI interface has been found yet (endpoints still at initial 0xf).
-                // Once MIDI is found (endpoints set to 0), don't reset the flag for subsequent
-                // non-MIDI interfaces, allowing multi-interface devices to enumerate correctly.
-                if (uhi_midi_dev.ep_in == 0xf && uhi_midi_dev.ep_out == 0xf) {
-                    iface_supported = false;
-                }
+                iface_supported = false;
             }
             break;
 
@@ -215,7 +210,8 @@ uhc_enum_status_t uhi_midi_install(uhc_device_t* dev) {
         ptr_iface = (usb_iface_desc_t*)((uint8_t*)ptr_iface + ptr_iface->bLength);
     }
 
-    if (iface_supported) {
+    if (uhi_midi_dev.ep_in && uhi_midi_dev.ep_in != 0xf &&
+        uhi_midi_dev.ep_out && uhi_midi_dev.ep_out != 0xf) {
         uhi_midi_dev.dev = dev;
         print_dbg("\r\n completed MIDI device install");
         return UHC_ENUM_SUCCESS;
